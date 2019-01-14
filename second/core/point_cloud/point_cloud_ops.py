@@ -47,7 +47,10 @@ def _points_to_voxel_reverse_kernel(points,
             coor_to_voxelidx[coor[0], coor[1], coor[2]] = voxelidx
             coors[voxelidx] = coor
         num = num_points_per_voxel[voxelidx]
-        if num < max_points:
+        if num == 0:
+            voxels[voxelidx,:,:] = points[i] # avoid influence of zero xyz
+            num_points_per_voxel[voxelidx] += 1
+        elif num < max_points:
             voxels[voxelidx, num] = points[i]
             num_points_per_voxel[voxelidx] += 1
     return voxel_num
@@ -98,7 +101,10 @@ def _points_to_voxel_kernel(points,
             coor_to_voxelidx[coor[0], coor[1], coor[2]] = voxelidx
             coors[voxelidx] = coor
         num = num_points_per_voxel[voxelidx]
-        if num < max_points:
+        if num == 0:
+            voxels[voxelidx,:,:] = points[i] # avoid influence of zero xyz
+            num_points_per_voxel[voxelidx] += 1
+        elif num < max_points:
             voxels[voxelidx, num] = points[i]
             num_points_per_voxel[voxelidx] += 1
     return voxel_num
