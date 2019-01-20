@@ -902,3 +902,19 @@ def global_translate(gt_boxes, points, noise_translate_std):
     gt_boxes[:, :3] += noise_translate
 
     return gt_boxes, points
+
+
+def remove_ground_points(points, ground_plane_para, r_rect, velo2cam, min_dist=0.2):
+    """
+    ground: [num_points, 3/4], velodyne coordinate
+    ground_plane_para: [4,] (a,b,c,d), camera coordinate
+    min_dist: remove the points whose distance from ground plane is less than "min_dist"
+    """
+    ABCD_velo = np.dot(ground_plane_para, np.dot(r_rect, velo2cam))
+
+    divise = np.sqrt(np.sum(np.square(ABCD_velo[:3])))
+    points_xyz = points[:,:3]
+    dist = np.abs((np.dot(points_xyz[:,:3], ABCD_velo[:3]) + ABCD_velo[3])/divise)
+    row_mask = dist > min_dist
+    return points[row_mask, :]
+

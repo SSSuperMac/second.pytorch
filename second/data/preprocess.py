@@ -13,6 +13,24 @@ from second.core.point_cloud.bev_ops import points_to_bev
 from second.data import kitti_common as kitti
 
 
+def read_plane_para(plane_path):
+    plane_para = []
+    width = height = 0
+    for line in  open(plane_path, 'r'):
+        if line[0] == "#":
+            continue
+        elif line[:5] == "Width":
+            width = int(line[6])
+
+        elif line[:6] == "Height":
+            height = int(line[7])
+        else:
+            plane_para = np.asarray(line.split(" "), dtype='f8')
+            assert(width==plane_para.size)
+            break
+    return plane_para
+
+
 def merge_second_batch(batch_list, _unused=False):
     example_merged = defaultdict(list)
     for example in batch_list:
@@ -49,6 +67,7 @@ def prep_pointcloud(input_dict,
                     db_sampler=None,
                     max_voxels=20000,
                     class_names=['Car'],
+                    remove_ground_plane=False,
                     remove_outside_points=False,
                     training=True,
                     create_targets=True,
@@ -96,6 +115,16 @@ def prep_pointcloud(input_dict,
     P2 = input_dict["P2"]
     unlabeled_training = unlabeled_db_sampler is not None
     image_idx = input_dict["image_idx"]
+
+    if remove_ground_plane:
+        v_path = pathlib.Path(root_path) / input_dict["image_path"]
+        plane_path = v_path.parent.parent / "planes" / (v_path.name[:-4] + ".txt")
+
+        if plane_path.exists():
+            plane_para = read_plane_para(plane_path)
+        else:
+            plane_para = np.asarray([0,-1, 0, 1.65], dtype='f8')
+        points = prep.remove_ground_points(points, plane_para, rect, Trv2c, min_dist=0.1)
 
     if reference_detections is not None:
         C, R, T = box_np_ops.projection_matrix_to_CRT_kitti(P2)
