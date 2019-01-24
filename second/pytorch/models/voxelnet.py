@@ -17,6 +17,7 @@ from second.pytorch.core import box_torch_ops
 from second.pytorch.core.losses import (WeightedSigmoidClassificationLoss,
                                           WeightedSmoothL1LocalizationLoss,
                                           WeightedSoftmaxClassificationLoss)
+from resFPN import ResFPN_RPN
 
 
 def _get_pos_neg_loss(cls_loss, labels):
@@ -614,6 +615,7 @@ class VoxelNet(nn.Module):
             num_rpn_input_filters = middle_num_filters_d2[-1]
         rpn_class_dict = {
             "RPN": RPN,
+            "resFPN": ResFPN_RPN,
         }
         rpn_class = rpn_class_dict[rpn_class_name]
         self.rpn = rpn_class(
